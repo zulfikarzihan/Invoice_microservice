@@ -1,0 +1,815 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "Invoice",
+        "version": "1.0.0",
+        "description": "# General Response format\nEvery API will return JSON object with following properties\n* status - \n__An Integer value represents HTTP status code.__\n* code - \n__An unique integer value__\n* title - \n__A human readable text summarizes the response__\n* details - \n__A human readable text elaborates the response__\n* timestamp - \n__An Integer value denoting Server's response timestamp in Epoch-Seconds.__\n* data - \n__An optional Array structure containing additional data__\n\n### Example\n```json\n{\n    \"status\": 200,\n    \"code\": 0,\n    \"title\": \"Success\",\n    \"details\": \"Success\",\n    \"timestamp\": 16027512894,\n    \"data\": [\n        {\n          \"id\":\"1\",\n          \"type\":\"Recurring\",\n          \"status\":\"Created\",\n          \"orderId\":null,\n          \"accountId\":\"1\",\n          \"amount\":\"50.000000\",\n          \"currency\":\"Taka\",\n          \"invoiceAt\":\"2020-10-15T18:00:00.000Z\",\n          \"paymentAttemptAt\":\"2020-10-15T18:00:00.000Z\",\n          \"remarks\":null,\n          \"gatewayId\":null,\n          \"gatewayParams\":null,\n          \"linkedInvoiceId\":null,\n          \"appId\":\"NA\",\n          \"createdBy\":\"test\",\n          \"updatedBy\":\"test\",\n          \"createdAt\":\"2020-10-15T21:05:40.000Z\",\n          \"updatedAt\":\"2020-10-15T21:15:52.000Z\",\n          \"items\":[\n            {\n              \"id\":\"1\",\n              \"invoiceId\":\"1\",\n              \"subscriptionId\":null,\n              \"productId\":\"1\",\n              \"productName\":\"Base Product\",\n              \"planId\":null,\n              \"planName\":null,\n              \"phaseType\":null,\n              \"amount\":\"10.000000\",\n              \"quantity\":\"1\",\n              \"details\":null\n            },\n            {\n              \"id\":\"2\",\n              \"invoiceId\":\"1\",\n              \"subscriptionId\":null,\n              \"productId\":\"2\",\n              \"productName\":\"Base Product 2\",\n              \"planId\":null,\n              \"planName\":null,\n              \"phaseType\":null,\n              \"amount\":\"40.000000\",\n              \"quantity\":\"1\",\n              \"details\":null\n            }\n          ],\n          \"payments\":[\n            {\n              \"id\":\"1\",\n              \"invoiceId\":\"1\",\n              \"paymentId\":\"12345678\",\n              \"paymentDate\":\"2020-10-15T18:00:01.000Z\",\n              \"success\":0\n            }\n          ]\n        }\n    ]\n}\n```\n\n# Result Codes\n* 0 - __Success__\n* 1 - __Invalid Invoice-Id__\n* 2 - __Invoice already in Paid state__\n* 3 - __Invoice already in Failed state__\n* 4 - __Failed to update Invoice__\n* 5 - __Invalid Linked-Invoice-Id__\n* 253 - __Bad Request [`Input constraints failed`]__\n* 254 - __Bad request [`Invalid JSON, Invalid path etc.`]__\n* 255 - __Internal Server Error__"
+    },
+    "paths": {
+        "/invoice": {
+            "get": {
+                "tags": [
+                    "Invoice"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "description": "Invoice-Id",
+                        "schema": {
+                            "format": "int64",
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "type",
+                        "description": "* Subscription\n* Recurring\n* Fixed\n* External-Charge\n* Refund",
+                        "schema": {
+                            "maxLength": 255,
+                            "enum": [
+                                "Subscription",
+                                "Recurring",
+                                "Fixed",
+                                "External-Charge",
+                                "Refund"
+                            ],
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "accountId",
+                        "description": "Account Id",
+                        "schema": {
+                            "maxLength": 255,
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "startInvoiceAt",
+                        "description": "Lower bound on __invoiceAt__. Format: YYYY-MM-DD HH:mm:ss",
+                        "schema": {
+                            "format": "date",
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "endInvoiceAt",
+                        "description": "Upper bound on __invoiceAt__. Format: YYYY-MM-DD HH:mm:ss",
+                        "schema": {
+                            "format": "date",
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "status",
+                        "description": "* Created\n* Pending\n* Cancelled\n* Paid\n* Failed",
+                        "schema": {
+                            "maxLength": 255,
+                            "enum": [
+                                "Created",
+                                "Pending",
+                                "Cancelled",
+                                "Paid",
+                                "Failed"
+                            ],
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "productId",
+                        "description": "Product Id",
+                        "schema": {
+                            "maxLength": 255,
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "planId",
+                        "description": "Subscription Plan Id",
+                        "schema": {
+                            "maxLength": 255,
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "subscriptionId",
+                        "description": "Subscription Id",
+                        "schema": {
+                            "maxLength": 255,
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "offset",
+                        "description": "Current record index",
+                        "schema": {
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "limit",
+                        "description": "Total record size",
+                        "schema": {
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "appId",
+                        "description": "Application Id",
+                        "schema": {
+                            "maxLength": 255,
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "startPaymentAttemptAt",
+                        "description": "Lower bound on __paymentAttemptAt__. Format: YYYY-MM-DD HH:mm:ss",
+                        "schema": {
+                            "format": "date",
+                            "type": "string"
+                        },
+                        "in": "query"
+                    },
+                    {
+                        "name": "endPaymentAttemptAt",
+                        "description": "Uppoer bound on __paymentAttemptAt__. Format: YYYY-MM-DD HH:mm:ss",
+                        "schema": {
+                            "format": "date",
+                            "type": "string"
+                        },
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Invoice"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Success"
+                    }
+                },
+                "summary": "Fetch Invoice(s)"
+            },
+            "put": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvoiceUpdateSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Invoice"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        },
+                        "description": "Success"
+                    }
+                },
+                "summary": "Update Invoice"
+            },
+            "post": {
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvoiceCreateSchema"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "Invoice"
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Invoice"
+                                }
+                            }
+                        },
+                        "description": "Success"
+                    }
+                },
+                "summary": "Create Invoice"
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "InvoiceCreateSchema": {
+                "description": "Root Type for InvoiceCreateSchema",
+                "required": [
+                    "type",
+                    "accountId",
+                    "currency",
+                    "invoiceAt",
+                    "paymentAttemptAt",
+                    "items",
+                    "createdBy"
+                ],
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "description": "* Subscription\n* Recurring\n* Fixed\n* External-Charge\n* Refund",
+                        "maxLength": 255,
+                        "enum": [
+                            "Subscription",
+                            "Recurring",
+                            "Fixed",
+                            "External-Charge",
+                            "Refund"
+                        ],
+                        "type": "string"
+                    },
+                    "accountId": {
+                        "description": "Account Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "currency": {
+                        "description": "Currency identification ex. BDT, USD etc.",
+                        "maxLength": 36,
+                        "type": "string"
+                    },
+                    "invoiceAt": {
+                        "format": "date-time",
+                        "description": "Invoice activation date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "paymentAttemptAt": {
+                        "format": "date-time",
+                        "description": " Payment attempt date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "* Created\n* Pending\n* Cancelled\n* Paid\n* Failed\n\nDefault: __Created__",
+                        "enum": [
+                            "Created",
+                            "Pending",
+                            "Cancelled",
+                            "Paid",
+                            "Failed"
+                        ],
+                        "type": "string"
+                    },
+                    "remarks": {
+                        "description": "Remarks",
+                        "maxLength": 1024,
+                        "type": "string"
+                    },
+                    "gatewayId": {
+                        "description": "Gateway Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "gatewayParams": {
+                        "$ref": "#/components/schemas/GatewayParams",
+                        "description": "",
+                        "maxLength": 255
+                    },
+                    "linkedInvoiceId": {
+                        "format": "int64",
+                        "description": "Linked Invoice Id. ",
+                        "type": "integer"
+                    },
+                    "items": {
+                        "description": "Item Information",
+                        "maxLength": 255,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Item"
+                        }
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment",
+                        "description": "Payment Information",
+                        "maxLength": 255
+                    },
+                    "createdBy": {
+                        "description": "Application-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "appId": {
+                        "description": "Application-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "type": "Recurring",
+                    "accountId": "1",
+                    "currency": "BDT",
+                    "invoiceAt": "2020-10-16 00:00:00",
+                    "paymentAttemptAt": "2020-10-16 00:00:00",
+                    "items": [
+                        {
+                            "productId": "1",
+                            "productName": "Base Product",
+                            "amount": "10"
+                        },
+                        {
+                            "productId": "2",
+                            "productName": "Base Product 2",
+                            "amount": "40"
+                        }
+                    ],
+                    "createdBy": "test"
+                }
+            },
+            "GatewayParams": {
+                "description": "Additional Gateway params associated with __accountId__ for __gatewayId__",
+                "type": "object",
+                "example": {
+                    "Data": "data"
+                }
+            },
+            "Payment": {
+                "description": "Root Type for items",
+                "required": [
+                    "paymentDate"
+                ],
+                "type": "object",
+                "properties": {
+                    "paymentId": {
+                        "description": "Payment-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "paymentDate": {
+                        "format": "date-time",
+                        "description": "Payment date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "success": {
+                        "description": "Flag to denote if payment is successful or not.\n* false - Unsuccessful\n* true - Successful\nDefault: true",
+                        "maxLength": 255,
+                        "type": "boolean"
+                    }
+                },
+                "example": {
+                    "paymentId": "123456",
+                    "paymentDate": "2012-07-10 14:58:00",
+                    "success": true
+                }
+            },
+            "Item": {
+                "description": "Root Type for items",
+                "required": [
+                    "productId",
+                    "productName",
+                    "amount"
+                ],
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "description": "Product id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "productName": {
+                        "description": "Product Name",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "subscriptionId": {
+                        "description": "Subscription Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "planId": {
+                        "description": "Subscription Plan Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "planName": {
+                        "description": "Subscription Plan Name",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "phaseType": {
+                        "description": "Subscription Phase Type ex. Trial, Fixed-Term, Evergreen etc.",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "amount": {
+                        "description": "Amount in __invoice.currency__.",
+                        "maximum": 20,
+                        "minimum": 6,
+                        "type": "number"
+                    },
+                    "quantity": {
+                        "description": "Quantity of item. Default: __1__",
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "details": {
+                        "description": "Details about item",
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "productId": "1",
+                    "productName": "Base Product",
+                    "amount": "10.000000"
+                }
+            },
+            "InvoiceUpdateSchema": {
+                "description": "Root Type for InvoiceUpdateSchema",
+                "required": [
+                    "id",
+                    "updatedBy"
+                ],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "format": "int64",
+                        "description": "Invoice-Id",
+                        "type": "integer"
+                    },
+                    "currency": {
+                        "description": "Currency identification ex. BDT, USD etc.",
+                        "maxLength": 36,
+                        "type": "string"
+                    },
+                    "invoiceAt": {
+                        "format": "date-time",
+                        "description": "Invoice activation date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "paymentAttemptAt": {
+                        "format": "date-time",
+                        "description": " Payment attempt date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "* Created\n* Pending\n* Cancelled\n* Paid\n* Failed",
+                        "enum": [
+                            "Created",
+                            "Pending",
+                            "Cancelled",
+                            "Paid",
+                            "Failed"
+                        ],
+                        "type": "string"
+                    },
+                    "remarks": {
+                        "description": "Remarks",
+                        "maxLength": 1024,
+                        "type": "string"
+                    },
+                    "gatewayId": {
+                        "description": "Gateway-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "gatewayParams": {
+                        "$ref": "#/components/schemas/GatewayParams",
+                        "description": ""
+                    },
+                    "items": {
+                        "description": "",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Item"
+                        }
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment",
+                        "description": "Payment Information",
+                        "maxLength": 255
+                    },
+                    "updatedBy": {
+                        "description": "Any kind of user identification",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "appId": {
+                        "description": "Application-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "id": 4,
+                    "status": "Created",
+                    "invoiceAt": "2020-10-16 14:38:26",
+                    "updatedBy": "zihan"
+                }
+            },
+            "ItemFetchSchema": {
+                "title": "Root Type for ItemFetchSchema",
+                "description": "",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "format": "int64",
+                        "description": "Invoice-Item-Id",
+                        "type": "integer"
+                    },
+                    "invoiceId": {
+                        "format": "int64",
+                        "description": "Invoice-Id",
+                        "type": "integer"
+                    },
+                    "subscriptionId": {
+                        "description": "Subscription-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "productId": {
+                        "description": "Product-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "productName": {
+                        "description": "Product name",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "planId": {
+                        "description": "Subscription Plan-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "planName": {
+                        "description": "Subscription-Plan Name",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "phaseType": {
+                        "description": "Subscription Phase-Type",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "amount": {
+                        "description": "Amount in __invoice.currency__.",
+                        "type": "number"
+                    },
+                    "quantity": {
+                        "description": "Quantity of item",
+                        "type": "string"
+                    },
+                    "details": {
+                        "description": "Details about item",
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "id": "1",
+                    "invoiceId": "1",
+                    "productId": "1",
+                    "productName": "Base Product",
+                    "amount": "10.000000",
+                    "quantity": "1"
+                }
+            },
+            "PaymentFetchSchema": {
+                "description": "Root Type for items",
+                "required": [],
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "format": "int64",
+                        "description": "Invoice-Payment-Id",
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "invoiceId": {
+                        "format": "int64",
+                        "description": "Invoice-Id",
+                        "minimum": 1,
+                        "type": "integer"
+                    },
+                    "paymentId": {
+                        "description": "Payment-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "paymentDate": {
+                        "format": "date-time",
+                        "description": "Payment date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "success": {
+                        "description": "* 0 - Failed\n* 1 - Success",
+                        "maxLength": 255,
+                        "type": "integer"
+                    }
+                },
+                "example": {
+                    "id": "1",
+                    "invoiceId": "1",
+                    "paymentId": "dnvdjnfv123",
+                    "paymentDate": "2020-10-15T18:00:01.000Z",
+                    "success": 0
+                }
+            },
+            "Invoice": {
+                "description": "Root Type for InvoiceCreateSchema",
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "format": "int64",
+                        "description": "Invoice-Id",
+                        "type": "integer"
+                    },
+                    "type": {
+                        "description": "* Subscription\n* Recurring\n* Fixed\n* External-Charge\n* Refund",
+                        "maxLength": 255,
+                        "enum": [
+                            "Subscription",
+                            "Recurring",
+                            "Fixed",
+                            "External-Charge",
+                            "Refund"
+                        ],
+                        "type": "string"
+                    },
+                    "status": {
+                        "description": "* Created\n* Pending\n* Cancelled\n* Paid\n* Failed",
+                        "enum": [
+                            "Created",
+                            "Pending",
+                            "Cancelled",
+                            "Paid",
+                            "Failed"
+                        ],
+                        "type": "string"
+                    },
+                    "orderId": {
+                        "description": "Order Id",
+                        "type": "string"
+                    },
+                    "accountId": {
+                        "description": "Account Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "invoiceAt": {
+                        "format": "date-time",
+                        "description": "Invoice activation date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "amount": {
+                        "description": "Total invoice amount i.e. sum of items' amount",
+                        "type": "number"
+                    },
+                    "currency": {
+                        "description": "Currency identification ex. BDT, USD etc.",
+                        "maxLength": 36,
+                        "type": "string"
+                    },
+                    "paymentAttemptAt": {
+                        "format": "date-time",
+                        "description": " Payment attempt date. Format: YYYY-MM-DD HH:mm:ss",
+                        "type": "string"
+                    },
+                    "remarks": {
+                        "description": "Remarks",
+                        "maxLength": 1024,
+                        "type": "string"
+                    },
+                    "gatewayId": {
+                        "description": "Gateway Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    },
+                    "gatewayParams": {
+                        "$ref": "#/components/schemas/GatewayParams",
+                        "description": "",
+                        "maxLength": 255
+                    },
+                    "linkedInvoiceId": {
+                        "format": "int64",
+                        "description": "Associated Invoice-Id",
+                        "type": "integer"
+                    },
+                    "items": {
+                        "description": "Item Information",
+                        "maxLength": 255,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemFetchSchema"
+                        }
+                    },
+                    "payment": {
+                        "description": "Payment Information",
+                        "maxLength": 255,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentFetchSchema"
+                        }
+                    },
+                    "createdBy": {
+                        "description": "Any kind of user-identification",
+                        "type": "string"
+                    },
+                    "updatedBy": {
+                        "description": "Any kind of user-identification",
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "format": "date-time",
+                        "description": "Creation date",
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "format": "date-time",
+                        "description": "Last udpate time",
+                        "type": "string"
+                    },
+                    "appId": {
+                        "description": "Application-Id",
+                        "maxLength": 255,
+                        "type": "string"
+                    }
+                },
+                "example": {
+                    "id": "1",
+                    "type": "Recurring",
+                    "status": "Created",
+                    "accountId": "1",
+                    "amount": "50.000000",
+                    "currency": "Taka",
+                    "invoiceAt": "2020-10-15T18:00:00.000Z",
+                    "paymentAttemptAt": "2020-10-15T18:00:00.000Z",
+                    "appId": "NA",
+                    "createdBy": "test",
+                    "updatedBy": "test",
+                    "createdAt": "2020-10-15T21:05:40.000Z",
+                    "updatedAt": "2020-10-15T21:15:52.000Z",
+                    "items": [
+                        {
+                            "id": "1",
+                            "invoiceId": "1",
+                            "productId": "1",
+                            "productName": "Base Product",
+                            "amount": "10.000000",
+                            "quantity": "1"
+                        },
+                        {
+                            "id": "2",
+                            "invoiceId": "1",
+                            "productId": "2",
+                            "productName": "Base Product 2",
+                            "amount": "40.000000",
+                            "quantity": "1"
+                        }
+                    ],
+                    "payments": [
+                        {
+                            "id": "1",
+                            "invoiceId": "1",
+                            "paymentId": "12345678",
+                            "paymentDate": "2020-10-15T18:00:01.000Z",
+                            "success": 0
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Invoice",
+            "description": ""
+        }
+    ]
+}
